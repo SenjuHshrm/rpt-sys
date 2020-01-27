@@ -1,0 +1,64 @@
+<div class='spinnerCon' *ngIf='isVisible_spinner'>
+<div class="sk-fading-circle">
+  <div class="sk-circle1 sk-circle"></div>
+  <div class="sk-circle2 sk-circle"></div>
+  <div class="sk-circle3 sk-circle"></div>
+  <div class="sk-circle4 sk-circle"></div>
+  <div class="sk-circle5 sk-circle"></div>
+  <div class="sk-circle6 sk-circle"></div>
+  <div class="sk-circle7 sk-circle"></div>
+  <div class="sk-circle8 sk-circle"></div>
+  <div class="sk-circle9 sk-circle"></div>
+  <div class="sk-circle10 sk-circle"></div>
+  <div class="sk-circle11 sk-circle"></div>
+  <div class="sk-circle12 sk-circle"></div>
+</div>
+</div>
+
+<!--<div class='login-form'>-->
+<div class="topMargin"><div>
+<div class='divCard brdr' *ngIf='nonAuth()'>
+	<div class='divHeader'><span class='mleft'>Login</span></div>
+	<div class='container' fxLayout fxLayout.xs='column' fxLayoutAlign='center' fxLayoutGap='10px' fxLayoutGap.xs='10px'>
+		<div class="item item-1 imgCon" fxFlex='50%'>
+			<img class="spc_Logo" src='../assets/SPCLOGO.png'>
+		</div>
+		<div class="item item-2" fxFlex='50%'>
+			<div class='rptTitle'><span>Real Property Tax</span></div>
+			<div class="loginError"><span *ngIf='loginErr'>{{ loginStat }}</span></div>
+			<form [formGroup]='loginForm' (ngSubmit)='login(loginForm.value)' novalidate>
+			<mat-card-content>
+				<div class='container inptCon' fxLayout='column' fxLayoutAlign='left' fxLayoutGap='1px'>
+					<!--<h3>Login</h3>-->
+					<mat-form-field class="item item-1 width-95" fxFlex='100%'>
+						<input formControlName='username' type='text' matInput placeholder='Username' required (click)='loginErr=false'>
+						<mat-error *ngIf="hasError('username','required')">Username field should not be empty</mat-error>
+					</mat-form-field>
+					<mat-form-field class="item item-2 width-95" fxFlex='100%'>
+						<input formControlName='password' type='password' matInput placeholder='Password' required (click)='loginErr=false'>
+						<mat-error *ngIf="hasError('password','required')">Password field should not be empty</mat-error>
+					</mat-form-field>
+				</div>
+				<br>
+
+        <div class='btnCon'>
+				<div class='container btnConW-95' fxLayout fxLayoutAlign='left' fxLayoutGap='4%'>
+					<div class='h-40' fxFlex='48%' (mousedown)='clckd=true' (mouseup)='clckd=false' (mouseleave)='clckd=false'>
+						<a routerLink="/register">
+							<button type='button' mat-raised-button class="regBtn" [ngClass]="{ 'regBtnMouseUp': !clckd, 'regBtnMouseDwn': clckd }">Register</button>
+						</a>
+					</div>
+					<div class='h-40' fxFlex='48%' (mousedown)='clicked=true' (mouseup)='clicked=false' (mouseleave)='clicked=false'>
+						<button type='submit' mat-raised-button color='primary' [ngClass]="{ 'logInBtnMouseUp': !clicked, 'logInBtnMouseDwn': clicked }">
+						Login
+						</button>
+					</div>
+				</div>
+        </div>
+        <br>
+			</mat-card-content>
+			</form>
+		</div>
+	</div>
+</div>
+<br><br>

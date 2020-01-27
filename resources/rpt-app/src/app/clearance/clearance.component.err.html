@@ -1,0 +1,16 @@
+<b mat-dialog-title class="dbHeader">&nbsp;&nbsp;System Message</b>
+<div class="h"></div>
+<div class="errMsg">
+   <span>{{ msg }}</span>
+</div>
+<br>
+<div class="h"></div>
+<div mat-dalog-actions>
+  <div class='container' fxLayout fxLayout.xs='column' fxLayoutGap='10px' fxLayout.xs='10px' fxLayoutAlign='center'>
+    <div fxFlex='50%'></div>
+    <div fxFlex='45%' (mousedown)='okBtn=true' (mouseup)='okBtn=false' (mouseleave)='okBtn=false'>
+      <button mat-raised-button color='primary' type='button' (click)='close()' [ngClass]="{'mUp': !okBtn, 'mDwn': okBtn}">OK</button>
+    </div>
+    <div fxFlex='5%'></div>
+  </div>
+</div>

@@ -1,0 +1,80 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #drawer class="sidenav" fixedInViewport="false"
+    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'" [opened]="false" (closed)='expandLt=false; ltLinks=false'>
+    <mat-toolbar color="primary" (click)='drawer.toggle()'>
+      <!-- <img src='../assets/SPCLOGO.png'>
+      <span *ngIf='nonAuth()'>Menu</span>
+      <span *ngIf='loggedIn()'>{{ userFullName }}</span>-->
+      <span class='w-150'>Menu</span>
+      <span class='navLogoMT'><img src='../assets/SPCLOGO.png'></span>
+    </mat-toolbar>
+    <!-- <mat-nav-list *ngIf='nonAuth()' (click)="drawer.toggle()">
+      <a mat-list-item routerLink="/login">Login</a>
+      <a mat-list-item routerLink="/register">Register</a>
+    </mat-nav-list> -->
+    <mat-nav-list *ngIf='loggedIn()'>
+    <div>
+      <div class='hdeShwNme'>
+        <span class='uprCaseName'>{{ userFullName }}</span>
+      </div>
+        <hr width='90%' class='hdeShwNme'>
+
+      <div class="sidenav">
+        <a mat-list-item *ngFor='let nav of navs' routerLink="{{ nav.route }}" (click)="drawer.toggle()">{{nav.text}}</a>
+      </div>
+      <!-- <a mat-list-item (click)="ltLinks = !ltLinks; xpandLtLinks()" ng-model="show">
+        <div>Land Tax</div>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <mat-icon *ngIf="!ltLinks">expand_more</mat-icon>
+        <mat-icon *ngIf="ltLinks">expand_less</mat-icon>
+      </a> -->
+
+      <!--<div [ngClass]="{ 'show': ltLinks, 'hide': !ltLinks }">
+        <a mat-list-item (click)='drawer.toggle(); gotoClearance();' class='fsze'>
+          <mat-icon>arrow_right</mat-icon>&nbsp;Clearance
+        </a>
+        <a mat-list-item class='fsze' (click)="drawer.toggle(); gotoRPTOP()">
+          <mat-icon>arrow_right</mat-icon>&nbsp;RPTOP
+        </a>
+        <a mat-list-item class='fsze' (click)="drawer.toggle(); gotoArrears()">
+          <mat-icon>arrow_right</mat-icon>&nbsp;Arrears
+        </a>
+      </div>-->
+      <!-- <mat-accordion>
+        <mat-expansion-panel class="mat-elevation-z0" [expanded]='expandLt'>
+          <a mat-list-item (click)='drawer.toggle(); gotoClearance();' class='fsze'>
+            <mat-icon>arrow_right</mat-icon>&nbsp;Clearance
+          </a>
+          <a mat-list-item class='fsze' (click)="drawer.toggle(); gotoRPTOP()">
+            <mat-icon>arrow_right</mat-icon>&nbsp;RPTOP
+          </a>
+          <a mat-list-item class='fsze' (click)="drawer.toggle(); gotoArrears()">
+            <mat-icon>arrow_right</mat-icon>&nbsp;Arrears
+          </a>
+        </mat-expansion-panel>
+      </mat-accordion> -->
+
+      <hr width='90%'>
+      <div>
+        <a mat-list-item (click)="drawer.toggle(); logOut(); ltLinks=false">Logout</a>
+      </div>
+      <!-- <div class='gtSettings'>
+        Go to settings
+      </div> -->
+    </div>
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <mat-toolbar color="primary">
+      <button *ngIf='loggedIn()' type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawer.toggle();">
+        <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+      </button>
+      <span class='spanRPT fntSze'>RPT Web Application</span>
+      <span *ngIf='loggedIn()' class="fntSze hdeNme uprCaseName">{{ userFullName }}</span>
+    </mat-toolbar>
+    <router-outlet>
+
+    </router-outlet>
+    <!-- Add Content Here -->
+  </mat-sidenav-content>
+</mat-sidenav-container>

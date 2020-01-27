@@ -1,0 +1,149 @@
+.w-150 {
+  width: 150px;
+}
+
+.navLogoMT {
+  margin-top: 7px;
+}
+
+.sidenav-container {
+  height: 100%;
+}
+
+.sidenav {
+  width: 210px;
+}
+
+.sideNavCon {
+  position: fixed;
+  top: 0;
+  width: 210px;
+  overflow: hidden;
+}
+
+.navListCon {
+  position: fixed;
+  top: 65px;
+  height: 565px;
+  width: 210px;
+}
+
+.gtSettings {
+  color: #FFF;
+  background: #0063EA;
+  cursor: pointer;
+  text-align: center;
+  width: 85%;
+  position: absolute;
+  bottom: 5px;
+  border: 1px solid #0063EA;
+  margin: 0 auto;
+  left: 7%;
+  /*transform: translate(-50%, -50%);*/
+}
+
+.spanRPT {
+  width: 1110px;
+}
+/* .sidenav .mat-toolbar {
+  background: #ffffff;
+  height: auto;
+} */
+
+.mat-toolbar.mat-primary {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/*.mat-toolbar img {
+  width: 100%;
+  height: auto;
+}*/
+
+img {
+  width: 50px;
+  height: 50px;
+}
+
+.mat-sidenav-content {
+  margin-bottom: 70px;
+}
+
+.mat-menu {
+  width:500px;
+}
+
+.fsze {
+  font-size: 13px;
+  text-align: right;
+}
+
+a:hover {
+  color: #0063EA;
+  font-weight: bold;
+  /*transition: all 2s ease out;*/
+}
+
+.show {
+  height:145px;
+  transition: height 1s ease-in-out;
+  display: block;
+}
+
+.hide {
+  display: none;
+}
+
+.hdeShwNme {
+  display: none;
+}
+
+@media only screen and (max-width: 600px) {
+  .fntSze {
+    font-size: 90%;
+  }
+}
+
+@media only screen and (max-width: 500px) {
+  .fntSze {
+    font-size: 80%;
+  }
+}
+
+@media only screen and (max-width: 439px) {
+  .fntSze {
+    font-size: 70%;
+  }
+}
+
+@media only screen and (max-width: 400px) {
+  .fntSze {
+    font-size: 67%;
+  }
+}
+
+@media only screen and (max-width: 380px) {
+  .fntSze {
+    font-size: 65%;
+  }
+}
+
+@media only screen and (max-width: 370px) {
+  .fntSze {
+    font-size: 100%;
+  }
+
+  .hdeNme {
+    display: none;
+  }
+
+  .hdeShwNme {
+    display: block;
+    margin-left: 10px;
+  }
+}
+
+.uprCaseName {
+  text-transform: capitalize;
+}
