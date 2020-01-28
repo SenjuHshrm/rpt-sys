@@ -1,17 +1,60 @@
-<p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
+## <p align="center">Web Based RPT System</p>
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
+This is a combination of the [rpt-app](https://github.com/SenjuHshrm/rpt-app) and [rpt-api-php](https://github.com/SenjuHshrm/rpt-api-php) repositories.
 
-## About Laravel
+## Requirements
+- [Nodejs](https://nodejs.org/en/)
+- [Angular CLI](https://angular.io/) (v7.3.9)
+- [Laravel](https://laravel.com/) (v5.4)
+- [PHP](https://www.php.net/) (v5.6)
+- [Composer](https://getcomposer.org/)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as:
+## Installation
+- First open powershell/cmd/git bash and clone the repo.
+```
+git clone https://github.com/SenjuHshrm/rpt-sys.git
+```
+- Access the cloned repo and install laravel dependencies
+```
+cd <project-folder>
+composer install
+```
+- After installation, you need to access the actual angular app located in resources/rpt-app and install npm dependencies
+```
+cd resources/rpt-app
+npm install
+```
+- Run the angular app
+```
+ng serve
+```
+- Run the laravel app
+```
+php artisan serve
+```
+- Change the configuration of API connection according to your IP address and to your laravel server port. You can found the config file in resources/rpt-app/src/app/default/config.ts
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- To build the angular app and copy all build files in laravel app, run this command:
+```
+ng build --prod --aot;
+rm -f ../../public/*.js;
+rm -f ../../public/*.css;
+rm -f -r ../../public/assets;
+rm -f ../../public/*.woff2;
+rm -f ../../public/*.ttf;
+rm -f ../views/index.html;
+cp dist/rpt-app/*.js ../../public/;
+cp dist/rpt-app/*.css ../../public/;
+cp dist/rpt-app/*.ttf ../../public/;
+cp dist/rpt-app/*.woff2 ../../public/;
+cp dist/rpt-app/assets ../../public/ -r;
+cp dist/rpt-app/index.html ../views/index.html;
+```
+- I recommend to run this command on git bash in order for the command to work. If you use poweshell, just change ```-f``` to ```-Force```
+
+- After running the command, you can now access the angular app on laravel ip and port.
+
+<!-- - [Simple, fast routing engine](https://laravel.com/docs/routing).
 - [Powerful dependency injection container](https://laravel.com/docs/container).
 - Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
 - Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
@@ -48,4 +91,4 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+The Laravel framework is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT). -->
