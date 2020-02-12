@@ -55,12 +55,12 @@
                     <input matInput type='text' [(ngModel)]='bldgAsmt.pin.bldgNo' name='pinBldgNo' maxlength='4'>
                   </mat-form-field>
                   <span>&nbsp;&nbsp;&nbsp;</span>
-                  <button class="cpBrdr" type='button' mat-raised-button color='primary' (click)="chckPIN(bldgAsmt.pin)">Check PIN</button>
+                  <button class="cpBrdr" type='button' mat-raised-button color='primary' (click)="chckPIN($event, bldgAsmt.pin)">Check PIN</button>
                   <span>&nbsp;&nbsp;&nbsp;</span>
                   <span>
                     <!-- spinner -->
                     <span class="spinnerCon">
-                      <mat-icon>{{ checkpinresult }}</mat-icon>
+                      <mat-icon *ngIf=pinspinner>{{ checkpinresult }}</mat-icon>
                     <div class="sk-fading-circle spnrMl" *ngIf='isVisible_spinner'>
                       <div class="sk-circle1 sk-circle"></div>
                       <div class="sk-circle2 sk-circle"></div>

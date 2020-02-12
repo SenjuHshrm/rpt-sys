@@ -101,7 +101,7 @@ export class BldgAsmtBg implements OnInit {
 			dTable = [];
 			this.dataTable = new MatTableDataSource(dTable);
 			let data: any = {
-				SearchIn: 'land',
+				SearchIn: 'bldg',
 				SearchBy: this.searchBy,
 				info: '',
 				sysCaller: 'RPTAS'

@@ -26,7 +26,9 @@ export class MainNavComponent implements OnInit {
 
   constructor(private breakpointObserver: BreakpointObserver, private route: Router) { }
 
-  ngOnInit() { }
+  ngOnInit() {
+    this.getUser()
+  }
 
   navs: any = [
     { route: 'assessments', text: 'Assessments' },

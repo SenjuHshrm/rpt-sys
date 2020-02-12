@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { MatTableDataSource } from '@angular/material';
+import { MatTableDataSource, MatSnackBar } from '@angular/material';
 import { FormControl, FormGroup, FormGroupDirective, NgForm, Validators } from '@angular/forms';
 import { ErrorStateMatcher } from '@angular/material/core';
 import * as _ from 'lodash';
@@ -9,6 +9,9 @@ import { landOwner } from '../interfaces/landOwner';
 import { bldgStructDesc} from '../interfaces/bldgStructDesc';
 import { getBldgVals } from '../services/getBldgVals.service';
 import { getBldgAddItems } from '../services/getBldgAddItems.service';
+import { genFaas } from '../services/genFaas.service'
+import { pincheck } from '../services/pincheck.service';
+import { assessBldg } from '../services/assessBldg.service'
 import { selectOpt } from '../interfaces/selectOpt'
 import { MatDialog } from '@angular/material/dialog';
 import { BldgAsmtLnd } from './dialog-search-land/bldgasmt-search';
@@ -17,6 +20,7 @@ import { getBldgStructMat } from '../services/getBldgStructMat.service';
 import { bldgStHeight } from '../services/bldgStHeight.service';
 import { group } from '@angular/animations';
 import * as moment from 'moment';
+import * as jwtDecode from 'jwt-decode'
 
 
 export interface additionalItems {
@@ -41,7 +45,9 @@ export class BuildingAssessmentComponent implements OnInit {
 
   ////////////////Variable declarations////////
   public bldgAsmt: any;
-  public checkpinresult;
+  public bldgData: any;
+  public pinspinner: boolean = true;
+  public checkpinresult: string;
   public ownersLs = new MatTableDataSource(ownerLs);
   public adminsLs = new MatTableDataSource(adminLs);
   public strcDesc = new MatTableDataSource(strDsc);
@@ -57,8 +63,16 @@ export class BuildingAssessmentComponent implements OnInit {
   public bldgAsmtLvl: any;
   public bldgPosHolder: any;
   public isVisible_spinner: boolean = false
-  public qrtrOpts: selectOpt[] = []
-  public statsOpts: selectOpt[] = []
+  public statsOpts: selectOpt[] = [
+    { value: 'TAXABLE', viewVal: 'EXEMPTED'},
+    { value: 'TAXABLE', viewVal: 'EXEMPTED'}
+  ];
+  public qrtrOpts: selectOpt[] = [
+    { value: '1', viewVal: '1' },
+    { value: '2', viewVal: '2' },
+    { value: '3', viewVal: '3' },
+    { value: '4', viewVal: '4' },
+  ];
   //struct materials
   public roofMat: selectOpt[] = []
   public flooringMat: selectOpt[] = []
@@ -80,6 +94,7 @@ export class BuildingAssessmentComponent implements OnInit {
   public flrHtFr: selectOpt[] = [];
   public flrHtTo: selectOpt[] = [];
   //floor type
+  public strDescFlag: boolean = true;
   public floortypeOpts: selectOpt[] = [];
   //additional items
   public aItemOpts: selectOpt[] = [];
@@ -105,14 +120,25 @@ export class BuildingAssessmentComponent implements OnInit {
   public aItemHeader: string[] = ['aItm', 'sType', 'sizem2', 'untCost', 'totalC', 'actions'];
   ////////////////Class constructor////////////
   constructor(
+    private chckpin: pincheck,
     private bldgVals: getBldgVals,
-    private mDialog: MatDialog
+    private mDialog: MatDialog,
+    private search: genFaas,
+    private saveData: assessBldg,
+    private sBar: MatSnackBar
   ) { }
 
   ////////////////Init component/////////////
   ngOnInit() {
+    ownerLs = []
+    adminLs = []
+    addtnlItems = []
+    strDsc = []
+    this.ownersLs = new MatTableDataSource(ownerLs);
+    this.adminsLs = new MatTableDataSource(adminLs);
+    this.strcDesc = new MatTableDataSource(strDsc);
+    this.addItemsTable = new MatTableDataSource(addtnlItems);
     this.bldgVals.getVals().subscribe(res => {
-      console.log(res)
       this.bldgIncr = res.res.bldgInc
       this.bldgRate = res.res.bldgRate
       this.bldgSpDpr = res.res.bldgSpDepr
@@ -124,6 +150,9 @@ export class BuildingAssessmentComponent implements OnInit {
       this.bldgPosHolder = res.res.bldgPosHolders
 
       //struct mat
+      this.roofMat = []
+      this.wallMat = []
+      this.flooringMat = []
       _.forEach(this.bldgStrcMat, arr => {
         switch(arr.type) {
           case 'ROOF':
@@ -148,6 +177,8 @@ export class BuildingAssessmentComponent implements OnInit {
 
       //gendesc type subtype
       let kb = Array.from(new Set(this.bldgMrkVl.map(x => x.type)))
+      this.kof = []
+      this.st = []
       _.forEach(kb, (arr: string) => {
         this.kof.push({
           value: arr,
@@ -164,6 +195,7 @@ export class BuildingAssessmentComponent implements OnInit {
       })
 
       //standard height
+      this.floortypeOpts = []
       _.forEach(this.bldgStHt, arr => {
         this.floortypeOpts.push({
           value: arr.type,
@@ -189,6 +221,7 @@ export class BuildingAssessmentComponent implements OnInit {
       })
 
       //bldg type
+      this.toBldg = []
       _.forEach(this.bldgType, arr => {
         this.toBldg.push({
           value: arr.type,
@@ -197,6 +230,7 @@ export class BuildingAssessmentComponent implements OnInit {
       })
 
       //bldg rate
+      this.bRating = []
       _.forEach(this.bldgRate, arr => {
         this.bRating.push({
           value: arr.type,
@@ -213,8 +247,12 @@ export class BuildingAssessmentComponent implements OnInit {
         })
       })
 
-
-
+      //position holder
+      _.forEach(this.bldgPosHolder, arr => {
+        if(arr.form_location == 'APPROVED BY') {
+          this.bldgAsmt.propAsmt.approvedBy = arr.holder_name
+        }
+      })
 
     })
     this.initForm()
@@ -326,8 +364,8 @@ export class BuildingAssessmentComponent implements OnInit {
         subTotal: '0.00'
       },
       propAppraisal: {
-        cbUnpainted: '',
-        cbSecHandMat: '',
+        cbUnpainted: false,
+        cbSecHandMat: false,
         bldgType: 'LIGHT MATERIAL',
         bldgRating: 'GOOD',
         bcUnitConstCost: '0.00',
@@ -374,22 +412,255 @@ export class BuildingAssessmentComponent implements OnInit {
 
   selectTrnsCode(code: any) {
     let md: any;
+    let searchIn: string = '';
     if(code == 'DISCOVERY / NEW DECLARATION (DC)') {
       md = this.mDialog.open(BldgAsmtLnd, { disableClose: true, width: '90%', height: '90%', data: { tc: 'Land FAAS' }, panelClass: 'custom-dialog-container' })
+      searchIn = 'land';
     } else {
       md = this.mDialog.open(BldgAsmtBg, { disableClose: true, width: '90%', height: '90%', data: { tc: 'Building FAAS' }, panelClass: 'custom-dialog-container' })
+      searchIn = 'bldg'
     }
     md.afterClosed().subscribe(res => {
       if(res == undefined) {
         this.bldgAsmt.trnsCode = ''
       } else {
-        console.log(res)
+        switch(searchIn) {
+          case 'land':
+            this.search.generateLand({ id: res.toString() }).subscribe(res => {
+              this.populateFormLnd(res)
+            })
+            break;
+          default:
+            this.search.generateBldg({ id: res.toString() }).subscribe(res => {
+              this.populateFormBldg(res)
+            })
+        }
       }
     })
   }
 
-  chckPIN(obj: any) {
+  populateFormLnd(xobj: any) {
+    console.log(xobj)
+    this.bldgData = xobj.faas;
+    let data = xobj.faas
+    let landOwner: string[] = []
+    _.forEach(xobj.owners, arr => {
+      if(arr.middle_name == '') {
+        landOwner.push(arr.first_name + ' ' + arr.last_name)
+      } else {
+        landOwner.push(arr.first_name + ' ' + arr.middle_name + ' ' + arr.last_name)
+      }
+    })
+    this.bldgAsmt.pin = {
+      city: data.pin_city,
+      district: data.pin_district,
+      barangay: data.pin_barangay,
+      section: data.pin_section,
+      parcel: data.pin_parcel,
+      bldgNo: ''
+    }
+    this.bldgAsmt.bldgLoc = {
+      street: data.street_no,
+      bLoc: data.city,
+      prov: data.province,
+      brgy: data.barangay,
+      subd: data.subdivision
+    }
+    this.bldgAsmt.lndRef = {
+      lndOwnr: landOwner.join(', '),
+      lndCloa: data.OCT_TCT_no,
+      lndSurveyNo: data.survey_no,
+      lndLotNo: data.lot_no,
+      lndBlkNo: data.block_no,
+      lndArp: data.arp_no,
+      lndArea: data.area
+    }
+  }
 
+  populateFormBldg(xobj: any) {
+    console.log(xobj)
+    this.strDescFlag = false
+    let data = xobj.faas,
+        owners = xobj.owners,
+        admins = xobj.admins,
+        bldgFlrs = xobj.floors,
+        bldgIncr = xobj.incrVal,
+        landOwner: string[] = [];
+    this.bldgData = xobj.faas
+    _.forEach(xobj.lndRefOwnr, arr => {
+      if(arr.middle_name == '') {
+        landOwner.push(arr.first_name + ' ' + arr.last_name)
+      } else {
+        landOwner.push(arr.first_name + ' ' + arr.middle_name + ' ' + arr.last_name)
+      }
+    })
+    this.bldgAsmt.arpNo = data.arp_no;
+    this.bldgAsmt.pin = {
+      city: data.pin_city,
+      district: data.pin_district,
+      barangay: data.pin_barangay,
+      section: data.pin_section,
+      parcel: data.pin_parcel,
+      bldgNo: data.pin_building_no
+    }
+    this.bldgAsmt.bldgLoc = {
+      street: data.street_no,
+      bLoc: data.city,
+      prov: data.province,
+      brgy: data.barangay,
+      subd: data.subdivision
+    }
+    this.bldgAsmt.lndRef = {
+      lndOwnr: landOwner.join(', '),
+      lndCloa: data.land_oct_tct_no,
+      lndSurveyNo: data.land_survey_no,
+      lndLotNo: data.land_lot_no,
+      lndBlkNo: data.land_block_no,
+      lndArp: data.land_arp_no,
+      lndArea: data.land_area
+    }
+    this.bldgAsmt.genDesc = {
+      kind: data.type,
+      strctType: data.class,
+      bldgPermitNo: data.building_permit_no,
+      permitIssueOn: new Date(data.building_permit_issue_date),
+      cCertTitle: data.condominium_cert_title,
+      cCertCompIssue: new Date(data.completion_cert_issue_date),
+      certOccDate: new Date(data.occupancy_cert_issue_date),
+      dateComp: new Date(data.constructed_date),
+      dateOcc: new Date(data.occupied_date),
+      aob: data.building_age
+    }
+    this.bldgAsmt.strDesc.storey = data.no_of_storey
+    this.areaSetBldgfloors(this.bldgAsmt.strDesc)
+    if(data.other_roof_material == 1) {
+      this.bldgAsmt.strDesc.cbRoofOth = true;
+      this.bldgAsmt.strDesc.roofOthInput = data.roof_material
+    } else {
+      this.bldgAsmt.strDesc.cbRoofOth = false;
+      this.bldgAsmt.strDesc.roofMat = data.roof_material
+    }
+    this.setRateVal(this.bldgAsmt.genDesc);
+    this.bldgAsmt.strDesc.totalArea = data.total_floor_area.toString()
+    this.bldgAsmt.strDesc.totalCost = data.total_floor_cost
+    this.bldgAsmt.additionalItems.subTotal = data.ai_total
+    this.bldgAsmt.propAppraisal = {
+      cbUnpainted: (data.unpainted == 0) ? false : true,
+      cbSecHandMat: (data.second_hand_material == 0) ? false : true,
+      bldgType: data.building_type,
+      bldgRating: data.building_rating,
+      bcUnitConstCost: data.bc_unit_construction_cost,
+      bcSubTotal: data.bc_sub_total_construction_cost,
+      aiSubTotal: data.ad_sub_total_additional_cost,
+      aiConsCost: data.ad_total_construction_cost,
+      deprRate: data.depreciation_rate,
+      deprCost: data.depreciation_cost,
+      deprTotalPrc: data.total_percent_depreciated,
+      deprMarkVal: data.depreciated_market_value
+    }
+    this.bldgAsmt.propAsmt = {
+      actualUse: data.pa_actual_use,
+      cbSpecCls: (data.pa_special_class == 0) ? false : true,
+      marketVal: data.pa_market_value,
+      status: data.pa_status,
+      asmtLvl: data.pa_assessment_level,
+      assessedVal: data.pa_assessed_value,
+      effQ: data.pa_effectivity_assess_quarter,
+      effY: data.pa_effectivity_assess_year.toString(),
+      total: data.pa_total_assessed_value,
+      appraisedBy: data.appraised_by,
+      appraisedOn: new Date(data.appraised_by_date),
+      recommending: data.recommending,
+      recommendOn: new Date(data.recommending_date),
+      approvedBy: data.approved_by,
+      approvedOn: new Date(data.approved_by_date),
+      memoranda: data.memoranda
+    }
+    this.bldgAsmt.supersededRec = {
+      supPIN: data.superseded_pin,
+      supARPNo: data.superseded_arp_no,
+      supTDNo: data.superseded_td_no,
+      supTotalAssessedVal: data.superseded_total_assessed_value,
+      supPrevOwner: data.superseded_previous_owner,
+      supEff: data.superseded_effectivity_assess,
+      supRecPrn: data.superseded_recording_personnel,
+      supDate: new Date(data.superseded_date)
+    }
+    if(owners.length > 0) {
+      _.forEach(owners, arr => {
+        ownerLs.push({
+          ownFName: arr.first_name,
+          ownMName: arr.middle_name,
+          ownLName: arr.last_name,
+          ownAddress: arr.address,
+          ownContact: arr.contact_no,
+          ownTIN: arr.TIN
+        })
+      })
+      this.ownersLs = new MatTableDataSource(ownerLs)
+    }
+    if(admins.length > 0) {
+      _.forEach(admins, arr => {
+        adminLs.push({
+          admFName: arr.first_name,
+          admMName: arr.middle_name,
+          admLName: arr.last_name,
+          admAddress: arr.address,
+          admContact: arr.contact_no,
+          admTIN: arr.TIN
+        })
+      })
+      this.adminsLs = new MatTableDataSource(adminLs)
+    }
+    if(bldgFlrs.length > 0) {
+      _.forEach(bldgFlrs, arr => {
+        strDsc.push({
+          floorNo: arr.floor_no.toString(),
+          area: arr.area.toString(),
+          flooringMat: arr.flooring_material.toUpperCase(),
+          wallMat: arr.wall_material.toUpperCase(),
+          floorHeight: arr.height.toString(),
+          standardHeight: arr.standard_height.toString(),
+          adjBaseRate: arr.adjusted_basic_rate,
+          floorType: arr.floor_type.toUpperCase()
+        })
+      })
+      this.strcDesc = new MatTableDataSource(strDsc)
+    }
+    if(bldgIncr.length > 0) {
+      addtnlItems = []
+      _.forEach(bldgIncr, arr => {
+        addtnlItems.push({
+          addItem: arr.building_additional_item,
+          subType: arr.building_additional_item_sub_type,
+          size: arr.size.toString(),
+          unitCost: arr.unit_cost,
+          totalCost: arr.total_cost
+        })
+      })
+      this.addItemsTable = new MatTableDataSource(addtnlItems)
+    }
+  }
+
+  chckPIN(evt:MouseEvent, obj: any) {
+    if(obj.city == '' ||
+        obj.district == '' ||
+        obj.barangay == '' ||
+        obj.section == '' ||
+        obj.parcel == '' ||
+        obj.bldgNo == '') {
+      console.log('No values')
+    } else {
+      evt.defaultPrevented
+      this.isVisible_spinner = true
+      this.pinspinner = false;
+      let pin = obj.city + '-' + obj.district + '-' + obj.barangay + '-' + obj.section + '-' + obj.parcel + '-' + obj.bldgNo
+      this.chckpin.checkPin({ pin: pin }).subscribe(res => {
+        (res.res == 'Valid') ? this.checkpinresult = 'check' : this.checkpinresult = 'close' ;
+        this.isVisible_spinner = false;
+        this.pinspinner = true;
+      })
+    }
   }
 
   addOwner(obj: any) {
@@ -552,16 +823,18 @@ export class BuildingAssessmentComponent implements OnInit {
         value: i.toString(),
         viewVal: i.toString()
       })
-      strDsc.push({
-        floorNo: i.toString(),
-        area: '0',
-        flooringMat: '',
-        wallMat: '',
-        floorHeight: '0',
-        standardHeight: '',
-        adjBaseRate: '0',
-        floorType: ''
-      })
+      if(this.strDescFlag) {
+        strDsc.push({
+          floorNo: i.toString(),
+          area: '0',
+          flooringMat: '',
+          wallMat: '',
+          floorHeight: '0',
+          standardHeight: '',
+          adjBaseRate: '0',
+          floorType: ''
+        })
+      }
     }
     this.strcDesc = new MatTableDataSource(strDsc)
     obj.totalArea = '0';
@@ -673,19 +946,13 @@ export class BuildingAssessmentComponent implements OnInit {
 
     obj.aiConsCost = ((+obj.bcSubTotal + +obj.aiSubTotal).toFixed(2)).toString()
     let dp = _.find(this.bldgType, { type: obj.bldgType })
-    let depRate = +this.bldgAsmt.genDesc.aob * dp.depreciation_rate;
-    obj.deprRate = depRate.toString()
-    let netDepRt = (depRate > dp.maximum_net_depreciation) ? dp.maximum_net_depreciation : depRate ;
+    obj.deprRate = dp.depreciation_rate.toString()
+    let netDepRt = ((+this.bldgAsmt.genDesc.aob * dp.depreciation_rate) > dp.maximum_net_depreciation) ? dp.maximum_net_depreciation : (+this.bldgAsmt.genDesc.aob * dp.depreciation_rate) ;
 
-    if(obj.cbUnpainted) {
-      let x = _.find(this.bldgSpDpr, { type: 'UNPAINTED' })
-      netDepRt = netDepRt + x.depreciation
-    }
-
-    if(obj.cbSecHandMat) {
-      let x = _.find(this.bldgSpDpr, { type: 'SECOND HAND MATERIALS' })
-      netDepRt = netDepRt + x.depreciation
-    }
+    let x = _.find(this.bldgSpDpr, { type: 'UNPAINTED' });
+    let y = _.find(this.bldgSpDpr, { type: 'SECOND HAND MATERIALS' })
+    netDepRt = (!obj.cbUnpainted) ? netDepRt : netDepRt + x.depreciation ;
+    netDepRt = (!obj.cbSecHandMat) ? netDepRt : netDepRt + y.depreciation ;
 
     let bRt = _.find(this.bldgRate, { type: obj.bldgRating })
     netDepRt = netDepRt + bRt.depreciation
@@ -715,7 +982,84 @@ export class BuildingAssessmentComponent implements OnInit {
   }
 
   save(evt: MouseEvent, form: any) {
-
+    evt.defaultPrevented
+    let token: any = jwtDecode(localStorage.getItem('auth'))
+    let data = {
+      trnsCode: form.trnsCode,
+      arpNo: form.arpNo,
+      pinBldg: form.pin.bldgNo,
+      type: form.genDesc.kind,
+      class: form.genDesc.strctType,
+      unitVal: form.strDesc.baseRateVal,
+      bldgPermitNo: form.genDesc.bldgPermitNo,
+      bldgPermitIssueDate: moment(form.genDesc.permitIssueOn).format('MM/DD/YYYY'),
+      condoCertTitle: form.genDesc.cCertTitle,
+      compCertIssueDate: moment(form.genDesc.cCertCompIssue).format('MM/DD/YYYY'),
+      occIssueDate: moment(form.genDesc.certOccDate).format('MM/DD/YYYY'),
+      constrDate: moment(form.genDesc.dateComp).format('MM/DD/YYYY'),
+      occDate: moment(form.genDesc.dateOcc).format('MM/DD/YYYY'),
+      aob: form.genDesc.aob,
+      storey: form.strDesc.storey,
+      roofMat: (form.strDesc.cbRoofOth) ? form.strDesc.roofMat : form.strDesc.roofOthInput ,
+      othRoofMat: (form.strDesc.cbRoofOth == true) ? 1 : 0 ,
+      totalFlrArea: form.strDesc.totalArea,
+      totalFlrCost: form.strDesc.totalCost,
+      aiSubTotal: form.additionalItems.subTotal,
+      unpainted: (form.propAppraisal.cbUnpainted == true) ? 1 : 0 ,
+      secHandMat: (form.propAppraisal.cbSecHandMat == true) ? 1 : 0,
+      bldgType: form.propAppraisal.bldgType,
+      bldgRate: form.propAppraisal.bldgRating,
+      bcConstCost: form.propAppraisal.bcUnitConstCost,
+      bcSubTotal: form.propAppraisal.bcSubTotal,
+      adSubTotal: form.propAppraisal.aiSubTotal,
+      totalConstCost: form.propAppraisal.aiConsCost,
+      deprRate: form.propAppraisal.deprRate,
+      deprCost: form.propAppraisal.deprCost,
+      totalPrcDepr: form.propAppraisal.deprTotalPrc,
+      deprMarkVal: form.propAppraisal.deprMarkVal,
+      actualUse: form.propAsmt.actualUse,
+      marketVal: form.propAsmt.marketVal,
+      asmtLvl: form.propAsmt.asmtLvl,
+      specialClass: (form.propAsmt.cbSpecCls == true) ? 1 : 0,
+      assessedVal: form.propAsmt.assessedVal,
+      totalAssessedVal: form.propAsmt.total,
+      status: form.propAsmt.status,
+      effY: form.propAsmt.effY,
+      effQ: form.propAsmt.effQ,
+      appraisedBy: form.propAsmt.appraisedBy,
+      appraisedByDate: moment(form.propAsmt.appraisedOn).format('MM/DD/YYYY'),
+      recommending: form.propAsmt.recommending,
+      recommendingDate: moment(form.propAsmt.recommendOn).format('MM/DD/YYYY'),
+      approvedBy: form.propAsmt.approvedBy,
+      approvedByDate: moment(form.propAsmt.approvedOn).format('MM/DD/YYYY'),
+      memoranda: form.propAsmt.memoranda,
+      supersededPin: form.supersededRec.supPIN,
+      supersededArpNo: form.supersededRec.supARPNo,
+      supersededTotalAsdval: form.supersededRec.supTotalAssessedVal,
+      supersededPrevOwner: form.supersededRec.supPrevOwner,
+      superededEffA: form.supersededRec.supEff,
+      supersededRecPersonnel: form.supersededRec.supRecPrn,
+      supersededTDno: form.supersededRec.supTDNo,
+      supersededDate: (form.supersededDate) ? moment(form.supersededRec.supDate).format('MM/DD/YYYY') : '',
+      stat: this.bldgData.status,
+      encoderId: token.username,
+      attachment: this.bldgData.attachment_file,
+      landFaasId: this.bldgData.land_faas_id,
+      owners: ownerLs,
+      admins: adminLs,
+      floors: strDsc,
+      additionalItems: addtnlItems
+    }
+    console.log(data)
+    this.saveData.saveBldg(data).subscribe(res => {
+      if(res.res) {
+        this.sBar.open('Saved successfully', 'OK', { duration: 2000 })
+        this.resetForm();
+      } else {
+        this.sBar.open('Server error', 'OK', { duration: 2000 })
+        console.log(res.res)
+      }
+    })
   }
 
   resetForm() {
