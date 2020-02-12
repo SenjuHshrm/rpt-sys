@@ -19,6 +19,9 @@ class GetBldgFaas extends Controller
             'faas' => $obj,
             'owners' => DB::select("CALL get_building_faas_owners(".$id.")"),
             'admins' => DB::select("CALL get_building_faas_administrators(".$id.")"),
+            'lndRefOwnr' => DB::select("CALL search_building_landref_owner(".$id.")"),
+            'floors' => DB::select("CALL get_building_faas_floors(".$id.")"),
+            'incrVal' => DB::select("CALL get_building_faas_additional_items(".$id.")")
           ]);
 				} else {
 					return json_encode([]);
