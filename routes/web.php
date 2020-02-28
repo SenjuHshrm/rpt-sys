@@ -16,6 +16,8 @@ Route::get('/', function () {
   return View::make('index');
 });
 
+
+
 Route::any('{any}', function() {
   View::addExtension('html', 'php');
   return View::make('index');

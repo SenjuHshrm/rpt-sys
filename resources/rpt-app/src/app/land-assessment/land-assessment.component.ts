@@ -91,6 +91,7 @@ export class LandAssessmentComponent implements OnInit {
     { value: 'SEGREGATION (SG)', viewVal: 'SEGREGATION (SG)' },
     { value: 'RECLASSIFICATION (RC)', viewVal: 'RECLASSIFICATION (RC)' },
     { value: 'SPECIAL PROJECT (SP)', viewVal: 'SPECIAL PROJECT (SP)' },
+    { value: 'GENERAL REVISION (GR)', viewVal: 'GENERAL REVISION (GR)' }
   ];
   public landClassLs: any = [];
   public subClassLs: selectOpt[] = [];

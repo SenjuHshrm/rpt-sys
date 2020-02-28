@@ -52,6 +52,7 @@ export class BuildingReassessmentComponent implements OnInit {
     { value: 'TRANSFER (TR)', viewVal: 'TRANSFER (TR)' },
     { value: 'RECLASSIFICATION (RC)', viewVal: 'RECLASSIFICATION (RC)' },
     { value: 'SPECIAL PROJECT (SP)', viewVal: 'SPECIAL PROJECT (SP)' },
+    { value: 'GENERAL REVISION (GR)', viewVal: 'GENERAL REVISION (GR)' }
   ]
 
   //Kind Of Building Options
