@@ -64,8 +64,8 @@ export class BuildingAssessmentComponent implements OnInit {
   public bldgPosHolder: any;
   public isVisible_spinner: boolean = false
   public statsOpts: selectOpt[] = [
-    { value: 'TAXABLE', viewVal: 'EXEMPTED'},
-    { value: 'TAXABLE', viewVal: 'EXEMPTED'}
+    { value: 'TAXABLE', viewVal: 'TAXABLE'},
+    { value: 'EXEMPTED', viewVal: 'EXEMPTED'}
   ];
   public qrtrOpts: selectOpt[] = [
     { value: '1', viewVal: '1' },

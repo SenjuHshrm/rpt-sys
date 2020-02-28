@@ -174,6 +174,7 @@ export class LandAssessmentComponent implements OnInit {
       obj == 'DISPUTE IN ASSESSED VALUE (DP)' ||
       obj == 'TRANSFER (TR)' ||
       obj == 'RECLASSIFICATION (RC)' ||
+      obj == 'GENERAL REVISION (GR)' ||
       obj == 'SPECIAL PROJECT (SP)') {
         const md = this.matDialog.open(LndAsmtSearch, { disableClose: true, data: { tCode: obj}, width: '90%', height: '90%', panelClass: 'custom-dialog-container' });
         md.afterClosed().subscribe(res => {
